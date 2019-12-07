@@ -1,0 +1,11 @@
+---
+alice:
+  node_id: org-a-node
+  metadata:
+    gameroom/first-name: admin1
+    gameroom/organization: OrgA
+bob:
+  node_id: org-b-node
+  metadata:
+    gameroom/first-name: admin2
+    gameroom/organization: OrgB
