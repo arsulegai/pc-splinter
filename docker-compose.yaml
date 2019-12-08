@@ -84,6 +84,51 @@ services:
           event-listener -vv --splinterd-url http://splinterd-node-org-a:8085 -c /configuration/deployment.yaml
         "
 
+    zookeeper-org-a:
+      build:
+        context: .
+        dockerfile: kafka.dockerfile
+      container_name: zookeeper-org-a
+      expose:
+        - 2181
+      working_dir: /kafka
+      entrypoint: |
+        bash -c "
+          bin/zookeeper-server-start.sh config/zookeeper.properties
+        "
+
+    kafka-org-a:
+      build:
+        context: .
+        dockerfile: kafka.dockerfile
+      container_name: kafka-org-a
+      expose:
+        - 9092
+        - 2181
+      depends_on:
+        - zookeeper-org-a
+      working_dir: /kafka
+      entrypoint: |
+        bash -c "
+          sed -i 's|zookeeper.connect=localhost:2181|zookeeper.connect=zookeeper-org-a:2181|g' config/server.properties \
+          && sed -i 's|#listeners=PLAINTEXT://:9092|listeners=PLAINTEXT://:9092|g' config/server.properties \
+          && sed -i 's|#advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://kafka-org-a:9092|g' config/server.properties \
+          && bin/kafka-server-start.sh config/server.properties
+        "
+
+    kafka-topic-org-a:
+      build:
+        context: .
+        dockerfile: kafka.dockerfile
+      container_name: kafka-topic-org-a
+      depends_on:
+        - kafka-org-b
+      working_dir: /kafka
+      entrypoint: |
+        bash -c "
+          bin/kafka-topics.sh --create --bootstrap-server kafka-org-a:9092 --replication-factor 1 --partitions 1 --topic splinter
+        "
+
     splinterd-node-org-a:
       image: splintercommunity/splinterd:0.3.6
       container_name: splinterd-node-org-a
@@ -153,6 +198,7 @@ services:
         - "8004:8000"
       depends_on:
         - splinterd-node-org-b
+        - kafka-org-b
       command: |
         bash -c "
             # check if splinterd-node-org-b is available
@@ -163,6 +209,51 @@ services:
 
             event-listener -vv --splinterd-url http://splinterd-node-org-b:8085 -c /configuration/deployment.yaml
           "
+
+    zookeeper-org-b:
+      build:
+        context: .
+        dockerfile: kafka.dockerfile
+      container_name: zookeeper-org-b
+      expose:
+        - 2181
+      working_dir: /kafka
+      entrypoint: |
+        bash -c "
+          bin/zookeeper-server-start.sh config/zookeeper.properties
+        "
+
+    kafka-org-b:
+      build:
+        context: .
+        dockerfile: kafka.dockerfile
+      container_name: kafka-org-b
+      expose:
+        - 9092
+        - 2181
+      depends_on:
+        - zookeeper-org-b
+      working_dir: /kafka
+      entrypoint: |
+        bash -c "
+          sed -i 's|zookeeper.connect=localhost:2181|zookeeper.connect=zookeeper-org-b:2181|g' config/server.properties \
+          && sed -i 's|#listeners=PLAINTEXT://:9092|listeners=PLAINTEXT://:9092|g' config/server.properties \
+          && sed -i 's|#advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://kafka-org-b:9092|g' config/server.properties \
+          && bin/kafka-server-start.sh config/server.properties
+        "
+
+    kafka-topic-org-b:
+      build:
+        context: .
+        dockerfile: kafka.dockerfile
+      container_name: kafka-topic-org-b
+      depends_on:
+        - kafka-org-b
+      working_dir: /kafka
+      entrypoint: |
+        bash -c "
+          bin/kafka-topics.sh --create --bootstrap-server kafka-org-b:9092 --replication-factor 1 --partitions 1 --topic splinter
+        "
 
     splinterd-node-org-b:
       image: splintercommunity/splinterd:0.3.6
