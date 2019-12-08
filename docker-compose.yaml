@@ -32,7 +32,8 @@ services:
                 -i /input/key_registry_spec.yaml \
                 -d /key_registry \
                 --force
-            fi
+            fi;
+            tail -f /dev/null
           "
 
     admin-org-a:
@@ -161,6 +162,24 @@ services:
               --bind 0.0.0.0:8085
         "
 
+    pc-app-reader-org-a:
+      build:
+        context: app-reader
+      depends_on:
+        - kafka-org-a
+      container_name: pc-app-reader-org-a
+      volumes:
+        - ./app-reader:/project
+      working_dir: /project
+      entrypoint: |
+        bash -c "
+          if [[ ! -f app-reader ]]; then
+            go build
+          fi;
+          sleep 10;
+          ./app-reader --kafka kafka-org-a:9092 --topic splinter
+        "
+
     admin-org-b:
       build:
         context: .
@@ -286,4 +305,22 @@ services:
               --service-endpoint 0.0.0.0:8043 \
               --network-endpoint 0.0.0.0:8044 \
               --bind 0.0.0.0:8085
+        "
+
+    pc-app-reader-org-b:
+      build:
+        context: app-reader
+      depends_on:
+        - kafka-org-b
+      container_name: pc-app-reader-org-b
+      volumes:
+        - ./app-reader:/project
+      working_dir: /project
+      entrypoint: |
+        bash -c "
+          if [[ ! -f app-reader ]]; then
+            go build
+          fi;
+          sleep 10;
+          ./app-reader --kafka kafka-org-b:9092 --topic splinter
         "

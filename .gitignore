@@ -14,3 +14,5 @@
 
 # Ignore the IDE files
 *.idea
+# Generated binary file
+app-reader/app-reader
