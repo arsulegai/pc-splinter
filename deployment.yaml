@@ -19,3 +19,7 @@ tp_version: 1.0
 tp_prefix: 00ec03
 
 tp_path: /project/produce-consume/processor/target/wasm32-unknown-unknown/release/produce-consume.wasm
+
+kafka_topic: splinter
+
+kafka_url:

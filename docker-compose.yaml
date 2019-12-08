@@ -79,9 +79,10 @@ services:
           while [[ $$(curl --write-out %{http_code} --silent --output /dev/null http://splinterd-node-org-a:8085/status) -ne 200 ]] ; do
              >&2 echo \"SplinterD is unavailable - sleeping\"
              sleep 1
-          done
+          done;
 
-          event-listener -vv --splinterd-url http://splinterd-node-org-a:8085 -c /configuration/deployment.yaml
+          sed -i 's|kafka_url: |kafka-org-a:9092|g' /configuration/deployment.yaml \
+          && event-listener -vv --splinterd-url http://splinterd-node-org-a:8085 -c /configuration/deployment.yaml
         "
 
     zookeeper-org-a:
@@ -205,9 +206,10 @@ services:
             while [[ $$(curl --write-out %{http_code} --silent --output /dev/null http://splinterd-node-org-b:8085/status) -ne 200 ]] ; do
                >&2 echo \"SplinterD is unavailable - sleeping\"
                sleep 1
-            done
+            done;
 
-            event-listener -vv --splinterd-url http://splinterd-node-org-b:8085 -c /configuration/deployment.yaml
+            sed -i 's|kafka_url: |kafka-org-b:9092|g' /configuration/deployment.yaml \
+            && event-listener -vv --splinterd-url http://splinterd-node-org-b:8085 -c /configuration/deployment.yaml
           "
 
     zookeeper-org-b:
